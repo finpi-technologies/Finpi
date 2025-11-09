@@ -3,34 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Finpi | FinTech Innovation</title>
+  <title>Finpi | Testnet</title>
+  <link rel="icon" href="logo.png" />
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f6fa;
-      color: #2f3640;
+      font-family: 'Poppins', sans-serif;
       text-align: center;
-      margin: 0;
-      padding: 60px;
+      padding: 50px;
+      background: #f5f7fa;
+      color: #333;
     }
     h1 {
-      color: #1b6cfb;
-      font-size: 2em;
+      color: #0070f3;
     }
-    p {
-      font-size: 1.2em;
+    button {
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      border: none;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 30px;
     }
-    .footer {
-      margin-top: 40px;
-      font-size: 0.9em;
-      color: #555;
+    button:hover {
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
+  <img src="logo.png" alt="Finpi Logo" width="120" />
   <h1>Welcome to Finpi 🚀</h1>
-  <p>Finpi is a FinTech platform powered by the Pi Network,<br>
-  providing secure local and international payments, savings, and financial services.</p>
-  <div class="footer">© 2025 Finpi Technologies</div>
+  <p>Test secure payments powered by Pi Network.</p>
+
+  <button id="payWithPi">💳 Pay with Pi (Testnet)</button>
+
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <script>
+    Pi.init({ version: "2.0" });
+
+    const payButton = document.getElementById("payWithPi");
+    payButton.addEventListener("click", async () => {
+      try {
+        const payment = await Pi.createPayment({
+          amount: 0.001,
+          memo: "Test transaction from Finpi App",
+          metadata: { purpose: "demo" },
+        });
+        console.log("Payment successful:", payment);
+        alert("✅ Test payment successful!");
+      } catch (error) {
+        console.error("Payment failed:", error);
+        alert("❌ Payment failed. Check console for details.");
+      }
+    });
+  </script>
+
+  <p style="margin-top:50px;">© 2025 Finpi Technologies</p>
 </body>
 </html>
