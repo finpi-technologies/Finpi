@@ -1,64 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Finpi | Testnet</title>
-  <link rel="icon" href="logo.png" />
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      text-align: center;
-      padding: 50px;
-      background: #f5f7fa;
-      color: #333;
-    }
-    h1 {
-      color: #0070f3;
-    }
-    button {
-      background: linear-gradient(90deg, #00c6ff, #0072ff);
-      border: none;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 30px;
-    }
-    button:hover {
-      opacity: 0.9;
-    }
-  </style>
-</head>
-<body>
-  <img src="logo.png" alt="Finpi Logo" width="120" />
-  <h1>Welcome to Finpi 🚀</h1>
-  <p>Test secure payments powered by Pi Network.</p>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<script>
+  // Initialize Pi SDK in sandbox (testnet) mode
+  Pi.init({
+    version: "2.0",
+    sandbox: true
+  });
 
-  <button id="payWithPi">💳 Pay with Pi (Testnet)</button>
+  const payButton = document.getElementById("payWithPi");
 
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-  <script>
-    Pi.init({ version: "2.0" });
-
-    const payButton = document.getElementById("payWithPi");
-    payButton.addEventListener("click", async () => {
-      try {
-        const payment = await Pi.createPayment({
-          amount: 0.001,
-          memo: "Test transaction from Finpi App",
-          metadata: { purpose: "demo" },
-        });
-        console.log("Payment successful:", payment);
-        alert("✅ Test payment successful!");
-      } catch (error) {
-        console.error("Payment failed:", error);
-        alert("❌ Payment failed. Check console for details.");
-      }
-    });
-  </script>
-
-  <p style="margin-top:50px;">© 2025 Finpi Technologies</p>
-</body>
-</html>
+  payButton.addEventListener("click", async () => {
+    try {
+      const payment = await Pi.createPayment({
+        amount: 0.001,
+        memo: "Finpi Test Transaction",
+        metadata: { purpose: "testnet" },
+        onReadyForServerApproval: async (paymentId) => {
+          console.log("✅ Ready for server approval:", paymentId);
+        },
+        onReadyForServerCompletion: async (paymentId, txid) => {
+          console.log("✅ Payment completed:", paymentId, txid);
+          alert("🎉 Testnet Payment Completed!");
+        },
+        onCancel: (paymentId) => {
+          console.warn("🚫 Payment cancelled:", paymentId);
+          alert("❌ Payment cancelled.");
+        },
+        onError: (error, payment) => {
+          console.error("⚠️ Payment error:", error, payment);
+          alert("⚠️ Payment failed. Check console for details.");
+        }
+      });
+    } catch (error) {
+      console.error("❌ Payment process failed:", error);
+      alert("⚠️ Could not start payment. Check console for details.");
+    }
+  });
+</script>
