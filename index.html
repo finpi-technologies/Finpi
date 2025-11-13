@@ -1,183 +1,135 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Finpi – Secure Pi Testnet App</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Finpi – Testnet</title>
+  <link rel="icon" href="logo.png"/>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9fafb;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      color: #222;
-    }
-
-    header {
-      background: #6b46c1;
-      color: white;
-      padding: 20px;
-      border-bottom-left-radius: 40px;
-      border-bottom-right-radius: 40px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    header img {
-      width: 90px;
-      margin-bottom: 10px;
-    }
-
-    main {
-      margin-top: 30px;
-      padding: 20px;
-    }
-
-    button {
-      margin: 10px;
-      padding: 12px 25px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: 0.3s ease;
-    }
-
-    #loginWithPi {
-      background: #6b46c1;
-      color: white;
-    }
-
-    #payWithPi {
-      background: #ff7a00;
-      color: white;
-    }
-
-    #loginWithPi:hover {
-      background: #5932a8;
-    }
-
-    #payWithPi:hover {
-      background: #e86c00;
-    }
-
-    .card {
-      margin: 30px auto;
-      background: white;
-      border-radius: 16px;
-      padding: 20px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    footer {
-      margin-top: 60px;
-      font-size: 14px;
-      color: #555;
-    }
-
-    .success {
-      color: #16a34a;
-      font-weight: bold;
-    }
-
-    .error {
-      color: #dc2626;
-      font-weight: bold;
-    }
+    body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f2f4f8;margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center}
+    .card{width:100%;max-width:680px;background:#fff;border-radius:14px;padding:28px;box-shadow:0 8px 30px rgba(20,20,40,.08);text-align:center}
+    img.logo{width:88px;border-radius:12px}
+    h1{margin:12px 0 6px;color:#222}
+    p.lead{margin:0 0 18px;color:#555;line-height:1.45}
+    .btn{display:inline-block;padding:12px 20px;border-radius:9px;border:none;cursor:pointer;font-size:15px}
+    .btn-primary{background:#6c42f5;color:#fff;margin:8px}
+    .btn-accent{background:#ff7a00;color:#fff;margin:8px}
+    .info{margin-top:18px;text-align:left}
+    .kbd{background:#f3f5ff;border-radius:6px;padding:8px 10px;font-family:monospace}
+    .status{margin-top:12px;padding:10px;border-radius:8px;background:#f7f9fc;color:#1b3a66}
+    .error{background:#fff1f0;color:#7b1f2a}
+    footer{margin-top:18px;color:#777;font-size:13px}
   </style>
 </head>
 <body>
-  <header>
-    <img src="logo.png" alt="Finpi Logo">
+  <div class="card">
+    <img class="logo" src="logo.png" alt="Finpi Logo"/>
     <h1>Welcome to Finpi</h1>
-    <p>Finpi is a FinTech platform powered by the Pi Network.<br>
-    Providing secure local and international payments, savings, and innovative digital finance.</p>
-  </header>
+    <p class="lead">Finpi is a FinTech platform powered by the Pi Network. Secure local & international payments, savings and innovative financial services.</p>
 
-  <main>
-    <div class="card">
-      <h2>🚀 Testnet Mode Active</h2>
-      <p>Login using your Pi Testnet account to simulate secure transactions.</p>
-      <button id="loginWithPi">🔐 Login with Pi (Testnet)</button>
-      <div id="userInfo"></div>
+    <div><span class="kbd">🚀 Testnet Mode</span></div>
+
+    <div style="margin-top:18px">
+      <button id="loginBtn" class="btn btn-primary">🔐 Login with Pi (Testnet)</button>
+      <button id="payBtn" class="btn btn-accent">💸 Pay with Pi (Testnet)</button>
     </div>
 
-    <div class="card">
-      <h2>💳 Send Test Pi</h2>
-      <p>Try a sample transaction using Pi Testnet.</p>
-      <button id="payWithPi">💸 Pay with Pi (Testnet)</button>
-      <p id="transactionStatus"></p>
-    </div>
-  </main>
+    <div id="userBox" class="info" aria-live="polite"></div>
+    <div id="resultBox" class="status" style="display:none"></div>
 
-  <footer>
-    © 2025 Finpi Technologies | Powered by Pi Network Testnet
-  </footer>
+    <footer>© 2025 Finpi Technologies | Powered by Pi Network Testnet</footer>
+  </div>
 
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <script>
-    // Initialize Pi SDK (Testnet mode)
+    // === INIT ===
     Pi.init({ version: "2.0", sandbox: true });
 
-    const loginBtn = document.getElementById("loginWithPi");
-    const payBtn = document.getElementById("payWithPi");
-    const userInfo = document.getElementById("userInfo");
-    const transactionStatus = document.getElementById("transactionStatus");
+    const loginBtn = document.getElementById('loginBtn');
+    const payBtn = document.getElementById('payBtn');
+    const userBox = document.getElementById('userBox');
+    const resultBox = document.getElementById('resultBox');
+
     let currentUser = null;
 
-    // Handle Login
-    loginBtn.addEventListener("click", async () => {
-      try {
-        const scopes = ["username", "payments"];
-        const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
+    // show status helper
+    function showResult(msg, isError=false){
+      resultBox.style.display = 'block';
+      resultBox.className = isError ? 'status error' : 'status';
+      resultBox.innerHTML = msg;
+    }
 
-        currentUser = authResult.user;
-        userInfo.innerHTML = `
-          <p class="success">✅ Logged in as: <strong>${currentUser.username}</strong></p>
-          <p>User ID: ${currentUser.uid}</p>
-        `;
-        console.log("✅ User logged in:", currentUser);
+    // === LOGIN ===
+    loginBtn.addEventListener('click', async () => {
+      try {
+        showResult('Opening Pi Testnet authentication...');
+        // Request payment scope so we can do payments
+        const auth = await Pi.authenticate(['username','payments'], onIncompletePaymentFound);
+        currentUser = auth.user || null;
+        userBox.innerHTML = currentUser
+          ? `✅ Logged in as: <strong>${currentUser.username}</strong><br/>User ID: <small>${currentUser.uid}</small>`
+          : '✅ Logged in (no user data returned).';
+        showResult('Login successful. You can now pay from your Testnet wallet.');
+        console.log('AUTH RESULT', auth);
       } catch (err) {
-        console.error("❌ Login failed:", err);
-        userInfo.innerHTML = `<p class="error">Login failed. Please try again.</p>`;
+        console.error('Login error', err);
+        showResult('Login failed — ensure Sandbox is authorized in Pi app & you are in Pi Browser.', true);
       }
     });
 
-    // Handle Payment
-    payBtn.addEventListener("click", async () => {
-      if (!currentUser) {
-        alert("Please login first!");
+    // Handle incomplete payments (SDK callback)
+    function onIncompletePaymentFound(payment){
+      console.warn('Incomplete payment detected', payment);
+      showResult('Incomplete payment detected — check Pi Wallet.', true);
+    }
+
+    // === PAY ===
+    payBtn.addEventListener('click', async () => {
+      // guard
+      if(!currentUser){
+        showResult('Please login first (Login with Pi).', true);
         return;
       }
 
+      // quick check: encourage user to check balance
+      showResult('Initializing payment — Pi Testnet wallet will prompt you to approve.');
+
       try {
         const payment = await Pi.createPayment({
-          amount: 0.002,
+          amount: 0.001,                 // small test amount
           memo: "Finpi Test Transaction",
-          metadata: { app: "Finpi-Testnet", user: currentUser.username },
-          onReadyForServerApproval: (paymentId) => console.log("Ready for approval:", paymentId),
+          metadata: { app: 'Finpi-Testnet', user: currentUser.username },
+          // SDK lifecycle handlers
+          onReadyForServerApproval: (paymentId) => {
+            console.log('onReadyForServerApproval', paymentId);
+            // Optional: send paymentId to your backend to record/prepare approval
+            showResult('Payment created — approve in Pi Wallet.');
+          },
           onReadyForServerCompletion: (paymentId, txid) => {
-            transactionStatus.innerHTML = `<p class="success">🎉 Transaction completed successfully!<br>Payment ID: ${paymentId}<br>TxID: ${txid}</p>`;
+            console.log('onReadyForServerCompletion', paymentId, txid);
+            showResult(`🎉 Payment completed successfully! TxID: <span class="kbd">${txid}</span>`);
           },
           onCancel: (paymentId) => {
-            transactionStatus.innerHTML = `<p class="error">🚫 Transaction cancelled.</p>`;
+            console.warn('onCancel', paymentId);
+            showResult('Payment cancelled by user.', true);
           },
-          onError: (error, paymentId) => {
-            transactionStatus.innerHTML = `<p class="error">⚠️ Error: ${error.message}</p>`;
+          onError: (error, payment) => {
+            console.error('onError', error, payment);
+            // Most important: show clear troubleshooting message
+            showResult('Payment failed. Check Pi Wallet balance and that sandbox is authorized (see console).', true);
           }
         });
+
+        console.log('createPayment returned', payment);
       } catch (err) {
-        console.error("❌ Payment Error:", err);
-        transactionStatus.innerHTML = `<p class="error">Payment failed. Try again.</p>`;
+        console.error('Payment launch error', err);
+        showResult('Payment could not be started — ensure sandbox is authorized and you are using Pi Browser.', true);
       }
     });
 
-    // Handle incomplete payments
-    function onIncompletePaymentFound(payment) {
-      console.warn("⚠️ Incomplete payment detected:", payment);
-    }
+    // Helpful hint for developers: open console to see detailed SDK logs
+    console.log('Finpi Testnet script loaded. Use Pi Browser + Sandbox authorization for best results.');
   </script>
 </body>
 </html>
