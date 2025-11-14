@@ -1,135 +1,96 @@
-
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Finpi – Testnet</title>
-  <link rel="icon" href="logo.png"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Finpi — Testnet</title>
+  <link rel="icon" href="/logo.png" />
   <style>
-    body{font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f2f4f8;margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center}
-    .card{width:100%;max-width:680px;background:#fff;border-radius:14px;padding:28px;box-shadow:0 8px 30px rgba(20,20,40,.08);text-align:center}
-    img.logo{width:88px;border-radius:12px}
-    h1{margin:12px 0 6px;color:#222}
-    p.lead{margin:0 0 18px;color:#555;line-height:1.45}
-    .btn{display:inline-block;padding:12px 20px;border-radius:9px;border:none;cursor:pointer;font-size:15px}
-    .btn-primary{background:#6c42f5;color:#fff;margin:8px}
-    .btn-accent{background:#ff7a00;color:#fff;margin:8px}
-    .info{margin-top:18px;text-align:left}
-    .kbd{background:#f3f5ff;border-radius:6px;padding:8px 10px;font-family:monospace}
-    .status{margin-top:12px;padding:10px;border-radius:8px;background:#f7f9fc;color:#1b3a66}
-    .error{background:#fff1f0;color:#7b1f2a}
-    footer{margin-top:18px;color:#777;font-size:13px}
+    body { font-family: system-ui, sans-serif; text-align:center; padding:40px; background:#f6f7fb; }
+    .btn { padding:14px 20px; border-radius:12px; border:0; cursor:pointer; font-size:16px; }
+    .login { background:#6e4cff; color:#fff; margin-bottom:12px; }
+    .pay { background:#ff8a00; color:#fff; }
+    .info { margin-top:18px; color:#666; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <img class="logo" src="logo.png" alt="Finpi Logo"/>
-    <h1>Welcome to Finpi</h1>
-    <p class="lead">Finpi is a FinTech platform powered by the Pi Network. Secure local & international payments, savings and innovative financial services.</p>
+  <img src="/logo.png" width="100" alt="Finpi logo" />
+  <h1>Welcome to Finpi</h1>
+  <p>Testnet Mode — Login and Pay (open in Pi Browser)</p>
 
-    <div><span class="kbd">🚀 Testnet Mode</span></div>
+  <button id="loginBtn" class="btn login">🔐 Login with Pi (Testnet)</button>
+  <button id="payBtn" class="btn pay">💸 Pay with Pi (Testnet)</button>
 
-    <div style="margin-top:18px">
-      <button id="loginBtn" class="btn btn-primary">🔐 Login with Pi (Testnet)</button>
-      <button id="payBtn" class="btn btn-accent">💸 Pay with Pi (Testnet)</button>
-    </div>
-
-    <div id="userBox" class="info" aria-live="polite"></div>
-    <div id="resultBox" class="status" style="display:none"></div>
-
-    <footer>© 2025 Finpi Technologies | Powered by Pi Network Testnet</footer>
-  </div>
+  <div id="status" class="info"></div>
 
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <script>
-    // === INIT ===
-    Pi.init({ version: "2.0", sandbox: true });
+    const statusEl = document.getElementById('status');
 
-    const loginBtn = document.getElementById('loginBtn');
-    const payBtn = document.getElementById('payBtn');
-    const userBox = document.getElementById('userBox');
-    const resultBox = document.getElementById('resultBox');
+    // Helper to show messages
+    function info(msg) { statusEl.textContent = msg; console.log(msg); }
 
-    let currentUser = null;
-
-    // show status helper
-    function showResult(msg, isError=false){
-      resultBox.style.display = 'block';
-      resultBox.className = isError ? 'status error' : 'status';
-      resultBox.innerHTML = msg;
-    }
-
-    // === LOGIN ===
-    loginBtn.addEventListener('click', async () => {
+    // login handler
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      if (!window.Pi) return alert('Open this page in Pi Browser.');
+      info('Opening Pi Testnet authentication...');
       try {
-        showResult('Opening Pi Testnet authentication...');
-        // Request payment scope so we can do payments
-        const auth = await Pi.authenticate(['username','payments'], onIncompletePaymentFound);
-        currentUser = auth.user || null;
-        userBox.innerHTML = currentUser
-          ? `✅ Logged in as: <strong>${currentUser.username}</strong><br/>User ID: <small>${currentUser.uid}</small>`
-          : '✅ Logged in (no user data returned).';
-        showResult('Login successful. You can now pay from your Testnet wallet.');
-        console.log('AUTH RESULT', auth);
-      } catch (err) {
-        console.error('Login error', err);
-        showResult('Login failed — ensure Sandbox is authorized in Pi app & you are in Pi Browser.', true);
-      }
-    });
-
-    // Handle incomplete payments (SDK callback)
-    function onIncompletePaymentFound(payment){
-      console.warn('Incomplete payment detected', payment);
-      showResult('Incomplete payment detected — check Pi Wallet.', true);
-    }
-
-    // === PAY ===
-    payBtn.addEventListener('click', async () => {
-      // guard
-      if(!currentUser){
-        showResult('Please login first (Login with Pi).', true);
-        return;
-      }
-
-      // quick check: encourage user to check balance
-      showResult('Initializing payment — Pi Testnet wallet will prompt you to approve.');
-
-      try {
-        const payment = await Pi.createPayment({
-          amount: 0.001,                 // small test amount
-          memo: "Finpi Test Transaction",
-          metadata: { app: 'Finpi-Testnet', user: currentUser.username },
-          // SDK lifecycle handlers
-          onReadyForServerApproval: (paymentId) => {
-            console.log('onReadyForServerApproval', paymentId);
-            // Optional: send paymentId to your backend to record/prepare approval
-            showResult('Payment created — approve in Pi Wallet.');
-          },
-          onReadyForServerCompletion: (paymentId, txid) => {
-            console.log('onReadyForServerCompletion', paymentId, txid);
-            showResult(`🎉 Payment completed successfully! TxID: <span class="kbd">${txid}</span>`);
-          },
-          onCancel: (paymentId) => {
-            console.warn('onCancel', paymentId);
-            showResult('Payment cancelled by user.', true);
-          },
-          onError: (error, payment) => {
-            console.error('onError', error, payment);
-            // Most important: show clear troubleshooting message
-            showResult('Payment failed. Check Pi Wallet balance and that sandbox is authorized (see console).', true);
-          }
+        const auth = await Pi.authenticate(['username','payments']);
+        // auth.user contains user info returned by Pi Browser
+        info('Logged in: ' + (auth?.user?.username || auth?.user?.id || 'unknown'));
+        // send to your backend login
+        await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user: auth.user })
         });
-
-        console.log('createPayment returned', payment);
       } catch (err) {
-        console.error('Payment launch error', err);
-        showResult('Payment could not be started — ensure sandbox is authorized and you are using Pi Browser.', true);
+        console.error(err);
+        info('Login failed: ' + (err.message || err));
       }
     });
 
-    // Helpful hint for developers: open console to see detailed SDK logs
-    console.log('Finpi Testnet script loaded. Use Pi Browser + Sandbox authorization for best results.');
+    // pay handler
+    document.getElementById('payBtn').addEventListener('click', async () => {
+      if (!window.Pi) return alert('Open this page in Pi Browser.');
+      info('Creating payment request...');
+      try {
+        // Ask backend for payment object (or create local payment)
+        const createResp = await fetch('/api/payments_create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: 0.01, memo: 'Finpi Test Payment', metadata: { app: 'Finpi' } })
+        });
+        const paymentObj = await createResp.json();
+
+        // Start payment in Pi Browser
+        await Pi.createPayment(paymentObj, {
+          onReadyForServerApproval: async (paymentId) => {
+            info('Ready for server approval: ' + paymentId);
+            // notify your backend so it can record the pending payment
+            await fetch('/api/payments_create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ amount: paymentObj.amount, memo: paymentObj.memo, metadata: paymentObj.metadata, paymentId })
+            });
+          },
+          onReadyForServerCompletion: async (paymentId, txid) => {
+            info('Payment completed: ' + txid);
+            // notify backend of completion
+            await fetch('/api/payments_complete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentId, txid })
+            });
+          },
+          onCancel: (paymentId) => { info('Payment cancelled'); },
+          onError: (err) => { info('Payment error: ' + (err?.message || err)); }
+        });
+      } catch (err) {
+        console.error(err);
+        info('Payment start failed: ' + (err?.message || err));
+      }
+    });
   </script>
 </body>
 </html>
