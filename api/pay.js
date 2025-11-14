@@ -1,16 +1,9 @@
+// api/pay.js
 export default function handler(req, res) {
-  if (req.method === "POST") {
-    const { amount, sender, receiver } = req.body;
-    if (!amount || !sender || !receiver) {
-      return res.status(400).json({ success: false, message: "Invalid payment data" });
-    }
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-    res.status(200).json({
-      success: true,
-      message: "Payment simulated successfully 💸",
-      details: { amount, sender, receiver },
-    });
-  } else {
-    res.status(405).json({ message: "Method not allowed" });
-  }
+  const { amount, memo, metadata } = req.body || {};
+  if (!amount) return res.status(400).json({ error: "Missing amount" });
+
+  return res.status(200).json({ success: true, amount, memo, metadata });
 }
