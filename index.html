@@ -10,7 +10,7 @@
     .btn { padding:14px 20px; border-radius:12px; border:0; cursor:pointer; font-size:16px; }
     .login { background:#6e4cff; color:#fff; margin-bottom:12px; }
     .pay { background:#ff8a00; color:#fff; }
-    .info { margin-top:18px; color:#666; }
+    .info { margin-top:18px; color:#666; white-space:pre-line; }
   </style>
 </head>
 <body>
@@ -23,72 +23,96 @@
 
   <div id="status" class="info"></div>
 
+  <!-- Pi SDK -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
   <script>
     const statusEl = document.getElementById('status');
-
-    // Helper to show messages
     function info(msg) { statusEl.textContent = msg; console.log(msg); }
 
-    // login handler
+    // IMPORTANT — Initialize SDK
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.Pi) {
+        Pi.init({
+          version: "2.0",
+          sandbox: true
+        });
+        info("Pi SDK initialized.");
+      } else {
+        info("Pi SDK not detected. Open this page inside Pi Browser.");
+      }
+    });
+
+    // LOGIN
     document.getElementById('loginBtn').addEventListener('click', async () => {
-      if (!window.Pi) return alert('Open this page in Pi Browser.');
-      info('Opening Pi Testnet authentication...');
+      if (!window.Pi) return alert("Open this page in Pi Browser.");
+
+      info("Opening Pi Testnet authentication...");
+
       try {
-        const auth = await Pi.authenticate(['username','payments']);
-        // auth.user contains user info returned by Pi Browser
-        info('Logged in: ' + (auth?.user?.username || auth?.user?.id || 'unknown'));
-        // send to your backend login
+        const auth = await Pi.authenticate(['username', 'payments']);
+
+        info("Logged in as: " + auth.user.username);
+
         await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user: auth.user })
         });
+
       } catch (err) {
-        console.error(err);
-        info('Login failed: ' + (err.message || err));
+        info("Login failed: " + err.message);
       }
     });
 
-    // pay handler
+    // PAY
     document.getElementById('payBtn').addEventListener('click', async () => {
-      if (!window.Pi) return alert('Open this page in Pi Browser.');
-      info('Creating payment request...');
+      if (!window.Pi) return alert("Open in Pi Browser.");
+
+      info("Creating payment...");
+
       try {
-        // Ask backend for payment object (or create local payment)
+        // Step 1 — ask backend for payment data
         const createResp = await fetch('/api/payments_create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: 0.01, memo: 'Finpi Test Payment', metadata: { app: 'Finpi' } })
+          body: JSON.stringify({
+            amount: 0.01,
+            memo: "Finpi Test Payment",
+            metadata: { app: "Finpi" }
+          })
         });
-        const paymentObj = await createResp.json();
 
-        // Start payment in Pi Browser
-        await Pi.createPayment(paymentObj, {
+        const paymentData = await createResp.json();
+
+        // Step 2 — start payment
+        await Pi.createPayment(paymentData, {
           onReadyForServerApproval: async (paymentId) => {
-            info('Ready for server approval: ' + paymentId);
-            // notify your backend so it can record the pending payment
-            await fetch('/api/payments_create', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ amount: paymentObj.amount, memo: paymentObj.memo, metadata: paymentObj.metadata, paymentId })
+            info("Payment pending approval: " + paymentId);
+
+            await fetch('/api/payments_approve', {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ paymentId })
             });
           },
+
           onReadyForServerCompletion: async (paymentId, txid) => {
-            info('Payment completed: ' + txid);
-            // notify backend of completion
+            info("Payment completed:\nTxID: " + txid);
+
             await fetch('/api/payments_complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ paymentId, txid })
             });
           },
-          onCancel: (paymentId) => { info('Payment cancelled'); },
-          onError: (err) => { info('Payment error: ' + (err?.message || err)); }
+
+          onCancel: () => info("Payment cancelled."),
+          onError: (error) => info("Payment error: " + error.message)
         });
+
       } catch (err) {
-        console.error(err);
-        info('Payment start failed: ' + (err?.message || err));
+        info("Payment failed: " + err.message);
       }
     });
   </script>
