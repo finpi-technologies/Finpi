@@ -1,6 +1,6 @@
 {
   "name": "Finpi",
   "description": "Finpi — secure Testnet fintech powered by Pi Network.",
-  "icon": "https://finpi.vercel.app/logo.png",
+  "icon": "/logo.png",
   "permissions": ["username", "payments"]
 }
