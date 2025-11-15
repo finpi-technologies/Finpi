@@ -6,12 +6,9 @@ export default function handler(req, res) {
 
   const { amount = 0.01, memo = "Finpi Test Payment", metadata = {} } = req.body || {};
 
-  // The JSON you return is used by Pi Browser to build the payment
-  const payment = {
+  return res.status(200).json({
     amount,
     memo,
-    metadata,
-  };
-
-  return res.status(200).json(payment);
+    metadata
+  });
 }
