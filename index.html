@@ -67,7 +67,7 @@
     document.getElementById("loginBtn").addEventListener("click", async () => {
       if (!window.Pi) return alert("Open this page in Pi Browser.");
 
-      info("Opening Pi Testnet authentication...");
+      info("Opening Pi authentication...");
 
       try {
         const auth = await Pi.authenticate(["username", "payments"]);
