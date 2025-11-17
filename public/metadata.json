@@ -1,0 +1,6 @@
+{
+  "name": "Finpi",
+  "description": "Finpi — secure FinTech platform powered by the Pi Network.",
+  "icon": "logo.png",
+  "permissions": ["username", "payments"]
+}
