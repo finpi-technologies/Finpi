@@ -1,8 +1,0 @@
-export default function handler(req, res) {
-  res.status(200).json({
-    name: "Finpi",
-    description: "Finpi — secure fintech powered by Pi Network.",
-    icon: "https://finpi.vercel.app/logo.png",
-    permissions: ["username", "payments"]
-  });
-}
