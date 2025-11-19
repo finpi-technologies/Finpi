@@ -3,13 +3,7 @@
   "short_name": "Finpi",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f6f7fb",
   "theme_color": "#6e4cff",
-  "icons": [
-    {
-      "src": "/logo.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "icons": [{ "src": "/logo.png", "sizes": "512x512", "type": "image/png" }]
 }
