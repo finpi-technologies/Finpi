@@ -3,68 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Finpi — Secure Testnet Payments</title>
+  <title>Finpi — Testnet Frontend</title>
   <link rel="icon" href="/logo.png" />
-  <meta name="description" content="Finpi — secure fintech powered by Pi Network" />
 
   <style>
-    :root{--purple:#6e4cff;--orange:#ff8a00;--bg:#f6f7fb}
-    body{font-family:system-ui,Segoe UI,Roboto,sans-serif;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
-    .card{width:92%;max-width:480px;background:#fff;border-radius:18px;padding:28px;box-shadow:0 12px 30px rgba(10,10,20,0.07);text-align:center}
-    img.logo{width:86px;border-radius:14px;margin-bottom:12px}
-    h1{margin:6px 0 4px;font-size:22px}
-    p.lead{margin:0 0 18px;color:#555}
-    .btn{display:block;width:100%;padding:12px 14px;border-radius:12px;border:0;color:#fff;font-weight:600;font-size:15px;cursor:pointer;margin-bottom:12px}
-    .btn.login{background:linear-gradient(90deg,var(--purple),#4b3aff)}
-    .btn.pay{background:linear-gradient(90deg,var(--orange),#e86b00)}
-    .status{margin-top:10px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.04);min-height:44px;white-space:pre-line}
-    footer{margin-top:14px;font-size:12px;color:#888}
-    @media (prefers-color-scheme:dark){body{background:#07070b} .card{background:#0f0f14;color:#eef} .status{background:rgba(255,255,255,0.04)}}
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f4f4f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      width: 90%;
+      max-width: 430px;
+      background: #fff;
+      padding: 26px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+    }
+    .logo {
+      width: 85px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      margin-top: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+    }
+    .login { background: #6e4cff; }
+    .pay { background: #ff8a00; }
+    .status {
+      margin-top: 16px;
+      padding: 12px;
+      background: #eee;
+      border-radius: 10px;
+      font-size: 14px;
+      white-space: pre-line;
+    }
   </style>
 </head>
+
 <body>
-  <div class="card">
-    <img src="/logo.png" class="logo" alt="Finpi Logo" />
-    <h1>Finpi</h1>
-    <p class="lead">Secure Testnet payments — Open this page in Pi Browser for full functionality.</p>
 
-    <button id="loginBtn" class="btn login">🔐 Login with Pi</button>
-    <button id="payBtn" class="btn pay">💸 Pay 0.01 π (Testnet)</button>
+<div class="card">
+  <img src="/logo.png" class="logo" alt="Finpi Logo">
+  <h2>Finpi</h2>
+  <p>Secure Testnet payments — Must be opened in Pi Browser</p>
 
-    <div id="status" class="status">Ready — open the page in Pi Browser and press Login.</div>
-    <footer>© 2025 Finpi Technologies</footer>
-  </div>
+  <button id="loginBtn" class="login">🔐 Login with Pi</button>
+  <button id="payBtn" class="pay">💸 Pay 0.01 π (Testnet)</button>
 
-  <!-- Pi SDK: only works inside Pi Browser -->
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <div id="status" class="status">Ready.</div>
+</div>
 
-  <script>
-    // Initialize Pi SDK for sandbox/testnet
-    if (window.Pi) {
-      Pi.init({ version: '2.0', sandbox: true });
-    }
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
-    const statusEl = document.getElementById('status');
-    function info(msg){ statusEl.textContent = msg; console.log(msg); }
+<script>
+if (window.Pi) {
+  Pi.init({ version: "2.0", sandbox: true });
+}
 
-    document.getElementById('loginBtn').addEventListener('click', async () => {
-      if (!window.Pi) return alert('Open this page inside Pi Browser to authenticate.');
-      info('Opening Pi authentication...');
-      try{
-        const auth = await Pi.authenticate(['username','payments']);
-        info('Logged in: ' + (auth.user?.username || auth.user?.id));
-      }catch(e){ info('Login failed: ' + (e.message||e)); }
+const statusEl = document.getElementById("status");
+function info(msg) { statusEl.textContent = msg; }
+
+// LOGIN
+document.getElementById("loginBtn").onclick = async () => {
+  if (!window.Pi) return alert("Open in Pi Browser.");
+
+  info("Opening Pi authentication...");
+
+  try {
+    const auth = await Pi.authenticate(["username", "payments"]);
+    info("Logged in: " + auth.user.username);
+  } catch (e) {
+    info("Login failed: " + e.message);
+  }
+};
+
+// PAYMENT (Frontend-only)
+document.getElementById("payBtn").onclick = async () => {
+  if (!window.Pi) return alert("Open in Pi Browser.");
+
+  info("Creating payment...");
+
+  const paymentData = {
+    amount: 0.01,
+    memo: "Finpi Frontend Test Payment",
+    metadata: { app: "Finpi" }
+  };
+
+  try {
+    await Pi.createPayment(paymentData, {
+
+      onReadyForServerApproval: (paymentId) => {
+        info("Waiting for approval...\nPayment ID: " + paymentId);
+      },
+
+      onReadyForServerCompletion: (paymentId, txid) => {
+        info("Payment completed!\nTxID: " + txid);
+      },
+
+      onCancel: () => {
+        info("Payment cancelled.");
+      },
+
+      onError: (err) => {
+        info("Payment error: " + err.message);
+      }
+
     });
 
-    document.getElementById('payBtn').addEventListener('click', async () => {
-      if (!window.Pi) return alert('Open this page inside Pi Browser to pay.');
-      info('Requesting payment...');
-      try{
-        const payment = await Pi.createPayment({ amount: 0.01, memo: 'Finpi Testnet Payment', metadata: { app: 'Finpi' } });
-        // payment.transaction.txid may contain tx id
-        info('Payment complete!\nTxID: ' + (payment.transaction?.txid || 'n/a'));
-      }catch(e){ info('Payment error: ' + (e.message||e)); }
-    });
-  </script>
+  } catch (e) {
+    info("Payment failed: " + e.message);
+  }
+};
+</script>
+
 </body>
 </html>
