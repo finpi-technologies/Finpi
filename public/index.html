@@ -1,107 +1,93 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Finpi — Secure Testnet Payments</title>
-  <link rel="icon" href="/favicon.ico" />
+  <title>Finpi — Testnet</title>
+  <link rel="icon" href="/logo.png" />
   <meta name="description" content="Finpi — secure fintech powered by Pi Network" />
   <style>
-    :root{--purple:#6e4cff;--orange:#ff8a00;--bg:#f6f7fb}
-    body{font-family:system-ui,Segoe UI,Roboto,sans-serif;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
-    .card{width:92%;max-width:480px;background:#fff;border-radius:18px;padding:28px;box-shadow:0 12px 30px rgba(10,10,20,0.07);text-align:center}
-    img.logo{width:86px;border-radius:12px;margin-bottom:12px}
-    h1{margin:6px 0 4px;font-size:22px}
-    p.lead{margin:0 0 18px;color:#555}
-    .btn{display:block;width:100%;padding:12px 14px;border-radius:12px;border:0;color:#fff;font-weight:600;font-size:15px;cursor:pointer;margin-bottom:12px}
+    :root { --purple:#6e4cff; --orange:#ff8a00; --bg:#f6f7fb; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); min-height:100vh; margin:0; display:flex; align-items:center; justify-content:center; }
+    .card { width:92%; max-width:460px; background:#fff; border-radius:16px; padding:28px; box-shadow:0 10px 30px rgba(0,0,0,0.07); text-align:center;}
+    img.logo{width:86px;border-radius:12px;margin-bottom:14px}
+    h1{margin:6px 0 6px}
+    p.lead{color:#444;margin:0 0 16px}
+    .btn{display:block;width:100%;padding:12px;border-radius:12px;border:0;color:#fff;font-weight:700;margin:10px 0;cursor:pointer}
     .login{background:linear-gradient(90deg,var(--purple),#4b3aff)}
     .pay{background:linear-gradient(90deg,var(--orange),#e86b00)}
-    .status{margin-top:10px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.04);min-height:48px;white-space:pre-line}
+    .status{margin-top:12px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.04);min-height:48px;white-space:pre-line}
     footer{margin-top:12px;font-size:12px;color:#888}
-    @media (prefers-color-scheme:dark){body{background:#07070b}.card{background:#0f0f14;color:#eef}.status{background:rgba(255,255,255,0.04)}}
   </style>
 </head>
 <body>
   <div class="card">
     <img src="/logo.png" class="logo" alt="Finpi logo" />
     <h1>Finpi</h1>
-    <p class="lead">Secure Testnet payments — open in Pi Browser for full functionality.</p>
+    <p class="lead">Secure Testnet payments — open this page in Pi Browser</p>
 
-    <button id="loginBtn" class="btn login">🔐 Login with Pi</button>
+    <button id="loginBtn" class="btn login">🔐 Login with Pi (Testnet)</button>
     <button id="payBtn" class="btn pay">💸 Pay 0.01 π (Testnet)</button>
 
-    <div id="status" class="status">Ready — please open in Pi Browser and press Login.</div>
+    <div id="status" class="status">Ready — open in Pi Browser first.</div>
     <footer>© 2025 Finpi Technologies</footer>
   </div>
 
-  <!-- Pi SDK (client) -->
+  <!-- Pi SDK (must remain exactly as below) -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
   <script>
-    // Initialize Pi SDK for sandbox (testnet) when available
-    if (typeof window !== "undefined" && window.Pi) {
-      Pi.init({ version: "2.0", sandbox: true });
-    }
-
-    const statusEl = document.getElementById("status");
+    const statusEl = document.getElementById('status');
     function info(msg){ statusEl.textContent = msg; console.log(msg); }
 
-    // Login: uses Pi.authenticate and points auth to our backend via authUrl
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-      if (!window.Pi) return alert("Open this page inside Pi Browser to authenticate.");
-      info("Opening Pi authentication...");
+    // initialize SDK for sandbox
+    if (window.Pi) {
+      Pi.init({ version: "2.0", sandbox: true });
+      info("Pi SDK detected (desktop). For full auth use Pi Browser on mobile.");
+    } else {
+      info("Pi SDK not detected — open in Pi Browser on mobile.");
+    }
+
+    // LOGIN
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      if (!window.Pi) return alert('Open this page inside Pi Browser on your phone.');
+      info('Opening Pi authentication...');
       try {
-        // authUrl tells Pi Browser to POST auth result to our backend
-        const auth = await Pi.authenticate(
-          ["username", "payments"],
-          { authUrl: `${location.origin}/api/auth` } // IMPORTANT
-        );
-        info("Logged in as: " + (auth.user?.username || auth.user?.id || "unknown"));
-      } catch (err) {
-        info("Login failed: " + (err?.message || err));
-      }
+        // request scopes: username and payments
+        const auth = await Pi.authenticate(['username','payments']);
+        info('Logged in: ' + (auth.user?.username || auth.user?.id || 'unknown'));
+        // send a POST to backend (optional)
+        await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ user: auth.user }) });
+      } catch (err) { info('Login failed: ' + (err.message || err)); }
     });
 
-    // Payment: ask backend for payment object and call Pi.createPayment
-    document.getElementById("payBtn").addEventListener("click", async () => {
-      if (!window.Pi) return alert("Open this page inside Pi Browser to pay.");
-      info("Creating payment request...");
+    // PAY
+    document.getElementById('payBtn').addEventListener('click', async () => {
+      if (!window.Pi) return alert('Open this page inside Pi Browser on your phone.');
+      info('Requesting payment...');
       try {
-        const resp = await fetch("/api/payments_create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: 0.01,
-            memo: "Finpi Test Payment",
-            metadata: { app: "finpi" }
-          })
+        // ask our server for the payment JSON (or build it client-side)
+        const resp = await fetch('/api/payments_create', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ amount: 0.01, memo: 'Finpi Test Payment', metadata: { app:'Finpi' } })
         });
-        const paymentData = await resp.json();
-        // Start payment in Pi Browser; callbacks handled by SDK
-        await Pi.createPayment(paymentData, {
+        const payment = await resp.json();
+
+        await Pi.createPayment(payment, {
           onReadyForServerApproval: async (paymentId) => {
-            info("Ready for server approval: " + paymentId);
-            // notify backend (server-side approval step)
-            await fetch("/api/payments_approve", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ paymentId })
-            });
+            info('Ready for server approval: ' + paymentId);
+            await fetch('/api/payments_approve', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ paymentId }) });
           },
           onReadyForServerCompletion: async (paymentId, txid) => {
-            info("Payment completed — txid: " + txid);
-            await fetch("/api/payments_complete", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ paymentId, txid })
-            });
+            info('Payment completed. TxID: ' + txid);
+            await fetch('/api/payments_complete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ paymentId, txid }) });
           },
-          onCancel: () => info("Payment cancelled"),
-          onError: (err) => info("Payment error: " + (err?.message || err))
+          onCancel: () => info('Payment cancelled by user.'),
+          onError: (e) => info('Payment error: ' + (e?.message || e))
         });
-      } catch (err) {
-        info("Payment failed: " + (err?.message || err));
-      }
+
+      } catch (e) { info('Payment failed: ' + (e.message || e)); }
     });
   </script>
 </body>
