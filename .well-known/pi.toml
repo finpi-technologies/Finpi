@@ -1,0 +1,42 @@
+# ------------------------------------------------------------------------------
+#  FinPi Token Configuration (Testnet)
+#  This file follows Pi Network Token Discovery Standards (pi.toml v1.0)
+# ------------------------------------------------------------------------------
+
+title = "FinPi Token Information"
+version = "1.0"
+network = "testnet"
+documentation = "https://finpi.net"
+
+[issuer]
+name = "FinPi Technologies Limited"
+public_key = "GA52U6RZQA6ZKS7MDDROR4LXJK5NN4EQCRJRWTFUFBR7WY45DJW6ZQI5"
+description = "Issuer account for the FinPi Token (FINPI) on Pi Testnet."
+
+[distributor]
+public_key = "GDL2NC3TD26MW2FB35P3UCJVBDEPJXQFHU5VBJ6KNTK5KJDQDBZIOZD2"
+description = "Primary distribution wallet for FINPI token allocations."
+
+[[CURRENCIES]]
+code = "FINPI"
+issuer = "GA52U6RZQA6ZKS7MDDROR4LXJK5NN4EQCRJRWTFUFBR7WY45DJW6ZQI5"
+name = "FinPi Token"
+desc = "FINPI is a Pi-powered experimental digital asset built for research, testing, and FinTech innovation."
+status = "test"
+display_decimals = 7
+image = "https://finpi.net/finpi.png"
+
+# ------------------------------------------------------------------------------
+#  Security & Compliance
+# ------------------------------------------------------------------------------
+[security]
+policy = "FINPI token is strictly for testing and research. Not for sale, trading, or exchange."
+risk_notice = "FINPI has no real-world monetary value on Testnet."
+
+# ------------------------------------------------------------------------------
+#  Contact
+# ------------------------------------------------------------------------------
+[contact]
+website = "https://finpi.net"
+support = "support@finpi.net"
+github = "https://github.com/finpi-technologies"
