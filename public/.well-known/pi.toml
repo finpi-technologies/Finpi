@@ -1,0 +1,9 @@
+[project]
+name = "FinPi"
+description = "FinPi ecosystem token"
+website = "https://finpi.net"
+token = "FINPI"
+issuer = "GA52U6RZQA6ZKS7MDDROR4LXJK5NN4EQCRJRWTFUFBR7WY45DJW6ZQI5"
+
+[network]
+type = "testnet"
